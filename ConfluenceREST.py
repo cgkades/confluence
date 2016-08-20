@@ -5,9 +5,14 @@ try:
 except:
     import json
 
-
 # Get page (all attributes and content)
 # Set page content
+class ConfluenceException(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
 
 class ConfluenceREST():
     def __init__(self, url, username, password, page=None, space=None):
@@ -32,7 +37,7 @@ class ConfluenceREST():
         try:
             r = requests.get(self.url + '/content', params=payload, headers=self.headers)
         except:
-            print "Error getting page."
+            raise ConfluenceException("Error getting page.")
 
         self.page_data = r.json()
 
@@ -42,8 +47,7 @@ class ConfluenceREST():
         try:
             page_id = self.page_data['results'][0]['id']
         except:
-            print "Error: Unable to get page id."
-            page_id = None
+            raise ConfluenceException("Error: Unable to get page id.")
 
         return page_id
 
@@ -54,13 +58,11 @@ class ConfluenceREST():
         try:
             page_version = self.page_data['version']
         except:
-            print "Error: Unable to get page version."
-            page_version = None
+            raise ConfluenceException("Error: Unable to get page version.")
 
         return page_version
 
-    # MUST ADD VERSION NUMBER!
-    def post_to_page(self, page=None, space=None, content):
+    def post_to_page(self, page=None, space=None, content=None):
         page_id = get_page_id(page,space)
         page_version = get_page_version(page,space)
         if page_id is None or page_version is None:
@@ -68,5 +70,5 @@ class ConfluenceREST():
         payload = {"version": {"number": page_version}, "id":page_id, "type":"page", "title":page,"space":{"key":space}, "body":{"storage":{"value": content,"representation":"storage"}}}
         url = self.url + "/" + page_id
         r = requests.put(url, params=payload, headers=self.headers)
-
-#{"type":"page", "id": "50333204", "body": {"storage": {"representation": "storage", "value": "<p>This is a new page</p>"}}, "space": {"key": "OPS3"}, "title": "PSI 11 Analysis","version":{"number":33}}
+        if r.status_code != 200:
+            raise ConfluenceException("Error: Unable to send data.")
