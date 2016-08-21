@@ -15,11 +15,11 @@ class ConfluenceException(Exception):
 
 
 class ConfluenceREST:
-    def __init__(self, url, username, password, page=None, space=None):
-        self.url = url + '/rest/api'
+    def __init__(self, url, username, password, page=None, space=None, rest_api_path='/rest/api'):
+        self.url = url + rest_api_path
         self.auth_string = self._encode_username_password(username, password)
         self.data = {}
-        self.headers = {"contentType": "application/json; charset=utf-8", "dataType":"json", "authorization":"Basic " + self.auth_string}
+        self.headers = {"content-type": "application/json", "authorization":"Basic " + self.auth_string}
         self.page = page
         self.space = space
         self.page_data = None
@@ -64,10 +64,10 @@ class ConfluenceREST:
 
     def post_to_page(self, page=None, space=None, content=None):
         page_id = get_page_id(page,space)
-        page_version = get_page_version(page,space)
+        page_version = int(get_page_version(page,space))
         if page_id is None or page_version is None:
             return
-        payload = {"version": {"number": page_version}, "id":page_id, "type":"page", "title":page,"space":{"key":space}, "body":{"storage":{"value": content,"representation":"storage"}}}
+        payload = {"version": {"number": page_version + 1}, "id":page_id, "type":"page", "title":page,"space":{"key":space}, "body":{"storage":{"value": content,"representation":"storage"}}}
         url = self.url + "/" + page_id
         r = requests.put(url, params=payload, headers=self.headers)
         if r.status_code != 200:
