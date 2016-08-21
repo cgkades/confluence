@@ -14,7 +14,7 @@ class ConfluenceException(Exception):
         return repr(self.value)
 
 
-class ConfluenceREST():
+class ConfluenceREST:
     def __init__(self, url, username, password, page=None, space=None):
         self.url = url + '/rest/api'
         self.auth_string = self._encode_username_password(username, password)
